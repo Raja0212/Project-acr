@@ -23,8 +23,14 @@ jobs:
       uses: azure/docker-login@v1
       with:
         login-server: cicdpipeline.azurecr.io
-        username: sathish
-        password: 
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+    - name: Build and push image
+      run: |
+        docker build -t cicdpipeline.azurecr.io/node:latest .
+        docker push cicdpipeline.azurecr.io/node:latest
+        
+      
 
 
  
