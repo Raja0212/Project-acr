@@ -16,3 +16,69 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+
+  name: Build and Deploy
+
+# Trigger the workflow on push or pull request events 
+  on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Set up environment variables
+env:
+  # Name of your ACR instance
+  REGISTRY_NAME: myacr.azurecr.io
+  
+  # Name of your AKS cluster
+  CLUSTER_NAME: myaks
+  
+  # Name of your resource group where ACR and AKS are located
+  RESOURCE_GROUP: myrg
+  
+  # Name of your Docker image 
+  IMAGE_NAME: myapp
+
+jobs:
+  build-and-push:
+    # Run this job on Ubuntu runner
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Check out the repository content 
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      # Log in to Azure using service principal credentials  
+      - name: Login to Azure
+        uses: azure/login@v1.4.0
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      # Log in to ACR using username and password  
+      - name: Login to ACR 
+        uses: azure/docker-login@v1.10.0
+        with:
+          login-server: ${{ env.REGISTRY_NAME }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      # Build a Docker image using BuildKit  
+      - name: Build image 
+        run : |
+          docker buildx create --use --name builder 
+          docker buildx build --tag ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --push .
+      
+      # Set up kubectl using AKS credentials  
+      - name : Setup kubectl 
+        uses : azure/aks-set-context@v1.2.0 
+        with :
+          creds : ${{ secrets.AZURE_CREDENTIALS }}
+          cluster-name : ${{ env.CLUSTER_NAME }}
+          resource-group : ${{ env.RESOURCE_GROUP }}
+
+      # Deploy the application using kubectl  
+      - name : Deploy app 
+        run : |
+          kubectl apply -f deployment.yaml
