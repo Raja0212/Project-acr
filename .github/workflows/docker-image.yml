@@ -28,8 +28,8 @@ jobs:
         password: ${{ secrets.ACR_PASSWORD }}
     - name: Build and push image
       run: |
-        docker build -t cicdpipeline.azurecr.io/node:latest .
-        docker push cicdpipeline.azurecr.io/node:latest
+        docker build -t cicdpipeline.azurecr.io/nodejs:latest .
+        docker push cicdpipeline.azurecr.io/nodejs:latest
         
         
       
