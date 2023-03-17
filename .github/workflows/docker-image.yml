@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 on:
-
+  workflow_dispatch:
   push:
     branches: [ "master" ]
   pull_request:
@@ -30,6 +30,7 @@ jobs:
       run: |
         docker build -t cicdpipeline.azurecr.io/nodejs:latest .
         docker push cicdpipeline.azurecr.io/nodejs:latest
+        
         
         
       
